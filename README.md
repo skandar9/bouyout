@@ -30,8 +30,11 @@ Promotional Offers and Discounts: The project incorporates a sophisticated coupo
 
 [Authentication](#authentication)
 
-[Swagger (API documentation)](#swagger)
-
+- [Swagger(API documentation)](#Swagger)
+    - [l5-Swagger Definition](#l5-Swagger-definition)
+    - [l5-Swagger Usage](#l5-swagger-usage)
+    - [l5-Swagger Configuration](#l5-swagger-configuration)
+    - [l5-Swagger Example](#l5-swagger-example)
 [Show specific realestate function](#show-real-estates)
 
 [Store offer function](#store-offer)
@@ -138,7 +141,7 @@ public function login (Request $request)
 
 [🔝 Back to contents](#contents)
 
-### **swagger**
+### **l5-swagger-definition**
 
 This project integrates Swagger documentation using the L5 Swagger package. Swagger is an open-source framework that allows to design, build, document, and consume RESTful APIs. With it, I easily generated interactive API documentation for my project.
 
@@ -150,16 +153,20 @@ l5-swagger benefits:
 - API Testing: The Swagger UI provides a user-friendly interface for testing API endpoints, allowing to send requests,
   view responses, and verify the functionality of APIs.
 
-l5-swagger usage:
+[🔝 Back to contents](#contents)
+
+### **l5-swagger-usage**
+
 - Install the package by running the following command:
   ```cmd
   composer require darkaonline/l5-swagger
   ```
-- Configure the package by modifying the [config/l5-swagger.php file](#l5-swagger.php).
+- Configure the package by modifying the [config/l5-swagger.php](#l5-swagger-configuration).
   This configuration file allows to specify various settings such as the API title, routes, file paths, security definitions.
 
-- https://zircote.github.io/swagger-php/
-
+- Generate OpenAPI documentation for RESTful APIs that defined, and add Swagger-PHP annotations
+  depending on https://zircote.github.io/swagger-php/ website that provides documentation and resources for the Swagger-PHP library.
+   
 - Run the following command to generate the Swagger documentation: 
   ```cmd
   php artisan l5-swagger:generate
@@ -172,9 +179,10 @@ l5-swagger usage:
 
 [🔝 Back to contents](#contents)
 
-### **l5-swagger.php**
+### **l5-swagger-configuration**
 
-config\l5-swagger.php:
+`config\l5-swagger.php`
+
 This file is a configuration file for the L5 Swagger package, which is used to generate API documentation. It provides settings and options to customize the behavior and appearance of the Swagger UI, as well as specify the location of the API annotations and generated documentation files.
 
 ```php
@@ -256,9 +264,9 @@ Is show at the top right of swagger UI interface. It responsable to authenticate
 
 'in' => 'header': This indicates the location of the API key, which is in the header of the API request.
 
-### **l5-swagger-controller**
+### **l5-swagger-annotations-in-Controller**
 
-app\Http\Controllers\Controller.php:
+`app\Http\Controllers\Controller.php:`
 
 ```php
 /**
@@ -284,19 +292,23 @@ class Controller extends BaseController
 }
 ```
 Swagger annotations provided using the @OA and @OAS tags. These annotations are used by the L5 Swagger package to generate API documentation.
+The annotations are used to document the API endpoints and provide additional information such as request and response schemas, parameters, and authentication requirements.
 
-- @OA\Info: This annotation is used to provide general information about the API, such as the title and version.
-- @OA\Server: These annotations define the server URLs where the API is hosted. In this case,
-  there are two servers specified: https://biut.rewardszone.net/api and http://127.0.0.1:8000/api. These URLs represent the base URLs for the API endpoints.
-- @OAS\SecurityScheme: This annotation defines a security scheme named 'bearer_token'. It specifies that the type of authentication
-  is HTTP, and the scheme used is Bearer token authentication. This corresponds to the security scheme configuration defined in the
-  L5 Swagger configuration file.
+- `@OA\Info`: This annotation is used to provide general information about the API. It includes the title and version of the API.
+
+- `@OA\Server`: This annotation defines the server URLs for the API.
+   There are two server URLs specified in this case:
+   - The first server URL is "https://biut.rewardszone.net/api".
+   - The second server URL is "http://127.0.0.1:8000/api". This is a local development server URL.
+
+- `@OAS\SecurityScheme`: This annotation defines a security scheme for the API. In this case, it specifies a bearer token authentication scheme. The `securityScheme` attribute is set to "bearer_token", and the type is set to "http" with the scheme "bearer".
 
 [🔝 Back to contents](#contents)
+### **l5-swagger-example**
 
-### **swagger-update-profile**
+![Logo](/images/swagger-example.png)
 
-app\Http\Controllers\AuthController.php:
+`app\Http\Controllers\AuthController.php`
 
 ```php
 /**
@@ -388,7 +400,7 @@ Here is a breakdown of the annotations used in this code:
 - @OA\Post: This annotation indicates that this API endpoint is an HTTP POST request.
 
 - path="/user": This specifies the URL path for this API endpoint, which is /user.
-  The full URL for this endpoint would depend on the base URL that I defined in [app\Http\Controllers\Controller.php](#l5-swagger-controller) file.
+  The full URL for this endpoint would depend on the base URL that I defined in [app\Http\Controllers\Controller.php](#l5-swagger-annotations-in-Controller) file.
 
 - description="Edit your profile": This provides a brief description of the purpose of this API endpoint,
   which is to edit the user's profile.
