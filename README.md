@@ -30,7 +30,7 @@ Promotional Offers and Discounts: The project incorporates a sophisticated coupo
 
 [Authentication](#authentication)
 
-- [Swagger(API documentation)](#Swagger)
+[Swagger(API documentation)](#Swagger)
     - [l5-Swagger Definition](#l5-Swagger-definition)
     - [l5-Swagger Usage](#l5-swagger-usage)
     - [l5-Swagger Configuration](#l5-swagger-configuration)
