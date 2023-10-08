@@ -14,7 +14,19 @@ Coupon and Discount Management: The project incorporates a coupon and discount m
 
 Promotional Offers and Discounts: The project incorporates a sophisticated coupon and discount management system. Property owners can create enticing promotional offers to attract more bookings and boost revenue. This feature not only benefits property owners but also adds value for guests, making their stays more affordable and enjoyable.
 
-## Contents [contains parts of my code]
+
+
+> :warning: **Warning:** This contents below ↓ contains just parts of my code.
+>                        You can access my full project files by clone it from my GitLab repository
+>                        (requires asking for my permissions  to grant you access to it):
+>                        https://gitlab.com/skandar.s1998/neoma 
+
+## Contents
+(contains descriptive parts of my code)
+
+[Tables and relations](#tables-and-relations)
+
+[Project actions and progress(graph)](#project-graph)
 
 [Authentication](#authentication)
 
@@ -22,13 +34,32 @@ Promotional Offers and Discounts: The project incorporates a sophisticated coupo
 
 [Show specific realestate function](#show-real-estates)
 
-[Store offer function](#offer)
+[Store offer function](#store-offer)
 
 ["Offer" resource](#offer-resource)
 
 [Add real estate to favorite](#favorite)
 
 [Store reservation function](#reservation)
+
+
+### **tables-and-relations**
+
+![Logo](/images/tables.png)
+
+For more details about the content of the tables <a href="/bouyout.pdf" target="_blank">Click here</a>
+
+[🔝 Back to contents](#contents)
+
+### **project-graph**
+
+This graph diagram represents the actions and progress for the project.
+
+![App Logo](/images/graph(1).png)
+![App Logo](/images/graph(2).png)
+![App Logo](/images/graph(3).png)
+
+[🔝 Back to contents](#contents)
 
 ### **authentication**
 
@@ -398,7 +429,7 @@ Route::put('/user', [AuthController::class, 'update_my_profile']);
 
 ### **show-real-estates**
 
-app\Http\Controllers\RealEstateController.php:
+`app\Http\Controllers\RealEstateController.php`
 
 ```php
 public function index(Request $request)
@@ -463,39 +494,36 @@ public function index(Request $request)
     return RealEstateResource::collection($realEstates);
 }
 ```
-The *index* function is responsible for retrieving a list of real estate properties could be based on the provided search parameters.
 
-It supports pagination, sorting, and filtering by different attributes.
+The `index()` function is responsible for retrieving a list of real estate properties based on the provided search parameters.
 
-The function starts by validating the search parameters.I used Various validation rules.
+The function starts by validating the search parameters using various validation rules.
 
-*$q* id the base query to fetch real estate properties along with their related data, including avenue, city, category, media, customer type, host, facilities, and offer.
-The query includes a condition to retrieve only available properties *(where('available', 1))*.
+The base query, `$q`, is used to fetch real estate properties along with their related data, including avenue, city, category, media, customer type, host, facilities, and offer. The query includes a condition to retrieve only available properties (`where('available', 1)`).
 
-- Search Criteria:
-The function checks the provided search parameters and applies additional conditions to the query accordingly, with if conditional statements..for example:
-If the *order_by* parameter is set to "nearest" and user latitude and longitude are provided, the query calculates the distance between the real estate's location and the user's location and assigns it to a distance alias.
+### Search Criteria
+The function checks the provided search parameters and applies additional conditions to the query accordingly, using if conditional statements. For example, if the `order_by` parameter is set to "nearest" and user latitude and longitude are provided, the query calculates the distance between the real estate's location and the user's location and assigns it to a distance alias.
 
-The query applies sorting based on the *order_by* parameter..for example.. If it is "nearest" and user latitude and longitude are provided, the results are sorted by the distance in ascending order. 
+### Sorting
+The query applies sorting based on the `order_by` parameter. For example, if it is "nearest" and user latitude and longitude are provided, the results are sorted by the distance in ascending order.
 
-- Pagination:
-The query results are paginated using the paginate method with the specified number of items per page. The paginated results are stored in *$_realEstates* and assigned to *$realEstates*.
+### Pagination
+The query results are paginated using the `paginate` method with the specified number of items per page. The paginated results are stored in `$_realEstates` and assigned to `$realEstates`.
 
-- Filtering by Offers:
-If the *offers_only* parameter is set to true, the function filters the $realEstates collection to include only the real estate properties that have an associated offer.
+### Filtering by Offers
+If the `offers_only` parameter is set to true, the function filters the `$realEstates` collection to include only the real estate properties that have an associated offer.
 
-Finally, the function returns a JSON response containing the collection of real estate resources.
 
-This function called from this route (with GET method) that I defined into *routes\api.php* file:
+This function is called from the route `real_estates` with the GET method, which is defined in the `routes\api.php` file as follows:
 ```php
-Route::apiResource('real_estates',RealEstateController::class);
+Route::apiResource('real_estates', RealEstateController::class);
 ```
 
 [🔝 Back to contents](#contents)
 
-### **offer**
+### **store-offer**
 
-app\Http\Controllers\OfferController.php:
+`app\Http\Controllers\OfferController.php`
 
 ```php
 public function store(Request $request)
@@ -534,37 +562,31 @@ public function store(Request $request)
     return response()->json(new OfferResource($offer), 201);
 }
 ```
-The *store* method validates the request parameters, checks the ownership and existing offers for the real estate,
-prepares the week days for the offer, creates a new offer, saves it to the database.
 
-The method begins by validating the request parameters using the *$request->validate()* method.
+The `store()` method is responsible for creating and saving a new offer for a real estate. It performs validation, ownership checks, and prepares the week days for the offer.
 
-It is checked whether the authenticated user is the owner of the real estate by comparing their IDs.
-If the owner check fails, a BadRequestException is thrown with the message "This real estate does not belong to you!".
+### Ownership Check
+It checks whether the authenticated user is the owner of the real estate by comparing their IDs. If the owner check fails, a `BadRequestException` is thrown with the message "This real estate does not belong to you!".
 
-It is checked whether there is already an enabled offer for the same real estate.
-This is done by querying the Offer model with conditions on *real_estate_id* and *enabled* fields.
-If such an offer exists, a BadRequestException is thrown with the message "Cannot enable two offers at the same time".
+### Existing Offer Check
+It checks whether there is already an enabled offer for the same real estate. This is done by querying the Offer model with conditions on `real_estate_id` and `enabled` fields. If such an offer exists, a `BadRequestException` is thrown with the message "Cannot enable two offers at the same time".
 
-Preparing Week Days:
-Duplicate values are removed from the week_days array using *array_unique()*.
-The array is then sorted in ascending order using *sort()*.
+### Preparing Week Days
+Duplicate values are removed from the `week_days` array using `array_unique()`. The array is then sorted in ascending order using `sort()`.
 
-A new Offer object is created with the provided data.
-The data includes the name, real_estate_id, percent, start_date, end_date, week_days, and enabled values.
+### Creating and Saving Offer
+A new Offer object is created with the provided data, including the name, real_estate_id, percent, start_date, end_date, week_days, and enabled values. The offer is then saved to the database.
 
-Finally, the function returns a JSON response containing the collection of ["Offer" resource](#offer-resource).
-
-This function called from this route (with POST method) that I defined into *routes\api.php* file:
+This function is called from the route `offers` with the POST method, which is defined in the `routes\api.php` file as follows:
 ```php
-Route::apiResource('offers',RealEstateController::class);
+Route::apiResource('offers', RealEstateController::class);
 ```
 
 [🔝 Back to contents](#contents)
 
 ### **offer-resource**
 
-app\Http\Resources\OfferResource.php:
+`app\Http\Resources\OfferResource.php`
 
 ```php
 class OfferResource extends JsonResource
@@ -593,13 +615,24 @@ class OfferResource extends JsonResource
     }
 }
 ```
-The *OfferResource* class formats the offer data into an array structure using the toArray method. It includes(ID, name, real estate ID, percentage, dates, week days, and enabled status), optionally includes the associated real estate information based on the value of the *$with_real_estate* parameter.
+
+The `OfferResource` class is responsible for formatting offer data into an array structure using the `toArray` method.
+
+- ID: The unique identifier of the offer.
+- Name: The name of the offer.
+- Real Estate ID: The ID of the associated real estate.
+- Percent: The percentage value of the offer.
+- Dates: The start and end dates of the offer.
+- Week Days: The days of the week when the offer is valid.
+- Enabled Status: Indicates whether the offer is currently enabled or not.
+
+Additionally, the class provides the option to include the associated real estate information based on the value of the `$with_real_estate` parameter.
 
 [🔝 Back to contents](#contents)
 
 ### **favorite**
 
-app\Http\Controllers\FavoriteController.php:
+`app\Http\Controllers\FavoriteController.php`
 
 ```php
 public function store(Request $request)
@@ -612,11 +645,11 @@ public function store(Request $request)
     to_user($user)->favorites()->attach($request->real_estate_id);
 }
 ```
-The *store* method validates the request parameter to ensure the existence of the *real_estate_id* in the real_estates table. It then retrieves the authenticated user and adds the corresponding real estate to the user's favorites by attaching it to the favorites relationship.
+The `store` method validates the request parameter to ensure the existence of the *real_estate_id* in the real_estates table. It then retrieves the authenticated user and adds the corresponding real estate to the user's favorites by attaching it to the favorites relationship.
 
-Adding Real Estate to Favorites:
+### Adding Real Estate to Favorites
 The [favorites() method](#favorites) is then called on the *user* model to access the favorites relationship.
-The *attach()* method is used to attach the provided real_estate_id to the user's favorites.
+The `attach()` method is used to attach the provided real_estate_id to the user's favorites.
 
 This function called from this route (with POST method) that I defined into *routes\api.php* file:
 ```php
@@ -624,7 +657,7 @@ Route::post('favorites', [FavoriteController::class, 'store'])->name('favorites.
 ```
 ### **favorite**
 
-app\Models\User.php:
+`app\Models\User.php`
 
 ```php
 .
@@ -637,24 +670,25 @@ public function favorites()
 .
 
 ```
-The relationship defined by favorites() is a many-to-many relationship.
-A user can have multiple favorite real estates, and a real estate can be favorite by multiple users.
+The `favorites()` method defines a many-to-many relationship between the current model (presumably a User model) and the RealEstate model. It specifies that a user can have multiple favorite real estates, and a real estate can be favorited by multiple users.
 
-The *belongsToMany()* take four parameters:
-- The first parameter is the related model, *RealEstate::class*, indicating that the relationship
-  is with the RealEstate model.
-- The second parameter, *'favorites'*, specifies the intermediate table name that stores
-  the relationship between users and real estates.
-- The third parameter, *'user_id'*, specifies the foreign key column name in the intermediate
-  table that references the users table.
-- The fourth parameter, *'real_estate_id'*, specifies the foreign key column name in the
-  intermediate table that references the real_estates table.
+The `belongsToMany()` method is used to define this relationship and takes four parameters:
+
+1. The first parameter, `RealEstate::class`, specifies the related model, indicating that the relationship is with the RealEstate model.
+
+2. The second parameter, `'favorites'`, specifies the name of the intermediate table that stores the relationship between users and real estates. This table serves as a bridge between the User and RealEstate models in the many-to-many relationship.
+
+3. The third parameter, `'user_id'`, specifies the foreign key column name in the intermediate table that references the users table. This column represents the foreign key of the User model.
+
+4. The fourth parameter, `'real_estate_id'`, specifies the foreign key column name in the intermediate table that references the real_estates table. This column represents the foreign key of the RealEstate model.
+
+By defining this relationship, I can access a user's favorite real estates using the `favorites` method, which returns a collection of RealEstate models associated with the user.
 
 [🔝 Back to contents](#contents)
 
 ### **reservation**
 
-app\Http\Controllers\ReservationController.php:
+`app\Http\Controllers\ReservationController.php`
 
 ```php
 public function store(Request $request)
@@ -840,34 +874,40 @@ public function possibilityCheck(Request $request){
     return $status;
 }
 ```
-The *store* function handles the creation of a reservation.
 
-The function starts by validating the data in the $request object using the validate method.
+The `store` function is responsible for handling the creation of a reservation based on the provided data in the `$request` object.
 
-Next, there is a call to the [possibilityCheck() method](#possibilityCheck), passing the $request object. This method is defined outside the store function and is responsible for checking if it's possible to make a reservation for the given real estate based on the provided start and end dates. It returns a boolean value indicating the possibility.
+- The function starts by validating the data in the `$request` object using the `validate` method. It checks if the required fields (`real_estate_id`, `start_date`, `end_date`, and `pay_all`) are present and meet the specified validation rules.
 
-If the *possibilityCheck method* returns false, indicating that the reservation is not possible, the function throws a BadRequestException with an appropriate error message.
+- Possibility Check: The function calls the `possibilityCheck` method, passing the `$request` object. This method is defined outside the `store` function and is responsible for checking if it's possible to make a reservation for the given real estate based on the provided start and end dates. It returns a boolean value indicating the possibility.
 
-The code retrieves the RealEstate object corresponding to the *real_estate_id* provided in the $request object.
+- The code retrieves the `RealEstate` object corresponding to the `real_estate_id` provided in the `$request` object.
+### User Identification
+The code determines whether the logged-in user is a guest or the host based on the `host_id` of the `RealEstate` object and the authenticated user's ID. If the user is not the host, they are considered a guest, and the `guest` variable is set to their user ID. Otherwise, if the user is the host, the `guest` variable is set to `null`, and the `source` is set to `'R'` (indicating the reservation is made by the host).
 
-The code then determines whether the logged-in user is a guest or the host based on the host_id of the RealEstate object and the authenticated user's ID. If the user is not the host, they are considered a guest, and the guest variable is set to their user ID. Otherwise, if the user is the host, the guest variable is set to null, and the source is set to 'R' (indicating the reservation is made by the host).
+### Calculation of Reservation Days
+The code calculates the number of days between the start and end dates provided in the `$request` object using the `DateTime` class.
 
-The code calculates the number of days between the start and end dates provided in the $request object using the DateTime class.
+### Offer Calculation
+It checks if there is an active offer (`Offer`) for the given real estate. If an offer exists, it calculates the number of days between the start date of the reservation and the offer's start and end dates.
 
-It checks if there is an active offer (Offer) for the given real estate. If an offer exists, it calculates the number of days between the start date of the reservation and the offer's start and end dates.
+### Cost Calculation
+Based on the number of days (`$days`), the code determines the cost per day of the reservation. The cost depends on the duration of the reservation: less than 7 days, less than 30 days, or 30 days or more.
 
-Based on the number of days ($days), the code determines the cost per day of the reservation. The cost depends on the duration of the reservation: less than 7 days, less than 30 days, or 30 days or more.
+### Total Cost Calculation
+The code calculates the total cost of the reservation by iterating over each day of the reservation and calculating the cost per day based on the day of the week (`$dow`). It also applies any offer discounts if applicable.
 
-The code calculates the total cost of the reservation by iterating over each day of the reservation and calculating the cost per day based on the day of the week ($dow). It also applies any offer discounts if applicable.
+### Coupon Validation and Discount Calculation
+The code then checks if a coupon is provided in the `$request` object. If a coupon is provided, it validates the coupon and checks if it is applicable to the selected real estate. If the coupon is invalid or not applicable, a `ValidationException` is thrown. If a valid coupon is provided, the code calculates the coupon discount based on the total cost (after applying the offer discount).
 
-The code then checks if a coupon is provided in the $request object. If a coupon is provided, it validates the coupon and checks if it is applicable to the selected real estate. If the coupon is invalid or not applicable, a ValidationException is thrown.
-
-If a valid coupon is provided, the code calculates the coupon discount based on the total cost (after applying the offer discount).
-
+### Subtotal, Tax, Fee, and Total Cost Calculation
 The code calculates the subtotal cost, tax, fee, and total cost of the reservation based on the cost, offer discount, coupon discount, and predefined percentages.
 
-The code determines the amount to be pre-paid based on whether the user has chosen to pay the entire cost ($request->pay_all) or a percentage defined in the real estate object.
+### Pre-Paid Calculation
+WThe code determines the amount to be pre-paid based on whether the user has chosen to pay the entire cost (`$request->pay_all`) or a percentage defined in the real estate object.
 
-Finally, a new Reservation object is created with all the relevant information and saved in the database. The function returns a JSON response with the created reservation data.
+### Reservation Creation
+Finally, a new `Reservation` object is created with all the relevant information and saved in the database. The function returns a JSON response with the created reservation data.
+
 
 [🔝 Back to contents](#contents)
