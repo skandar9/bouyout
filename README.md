@@ -1,18 +1,16 @@
-Project Description:
+Project overview:
 
-A real estate management system accessible through a website and mobile app,, allowing users to interact with real estate properties, make reservations, leave reviews, and manage their bookings, it supports multiple user roles.
+A real estate management system accessible through a website and mobile app using APIs,, allowing users to interact with real estate properties, make reservations, leave reviews, and manage their bookings.
 
-Multi-User Support: The application supports multiple user roles, including guests, hosts, and administrators. Each role has specific privileges and access levels, ensuring a secure and personalized experience for all users involved in the real estate ecosystem.
+The application supports multiple user roles, including guests, hosts, and administrators. Each role has specific privileges and access levels, ensuring a secure and personalized experience for all users involved in the real estate ecosystem.
 
-Efficient Real Estate Management: The application streamlines the management of real estate properties, allowing property owners to easily list their properties, manage reservations, and track availability. This simplifies the process of handling multiple properties and enables efficient management of bookings.
+The application streamlines the management of real estate properties, allowing property owners to easily list their properties, manage reservations, and track availability. This simplifies the process of handling multiple properties and enables efficient management of bookings.
 
-Reservation System: The project offers a reservation system, enabling guests to search for available properties, book accommodations. Reservation details including start and end dates, costs, discounts, and additional services, enhancing the overall booking experience.
+The project offers a reservation system, enabling guests to search for available properties, book accommodations. Reservation details including start and end dates, costs, discounts, and additional services, enhancing the overall booking experience.
 
-Reviews and Ratings: The application includes a robust review and rating system, empowering users to share their experiences and feedback about the properties they have stayed in.
+The application includes a robust review and rating system, empowering users to share their experiences and feedback about the properties they have stayed in.
 
-Coupon and Discount Management: The project incorporates a coupon and discount management, allowing property owners to offer promotional deals to guests.
-
-Promotional Offers and Discounts: The project incorporates a sophisticated coupon and discount management system. Property owners can create enticing promotional offers to attract more bookings and boost revenue. This feature not only benefits property owners but also adds value for guests, making their stays more affordable and enjoyable.
+The project incorporates a sophisticated coupon and discount management system. Property owners can create enticing promotional offers to attract more bookings and boost revenue. This feature not only benefits property owners but also adds value for guests, making their stays more affordable and enjoyable.
 
 
 
@@ -28,7 +26,7 @@ Promotional Offers and Discounts: The project incorporates a sophisticated coupo
 
 [Project actions and progress(graph)](#project-graph)
 
-[Authentication](#authentication)
+[Authentication (register & login)](#authentication)
 
 - [Swagger(API documentation)](#Swagger)
     - [l5-Swagger Definition](#l5-Swagger-definition)
@@ -39,12 +37,11 @@ Promotional Offers and Discounts: The project incorporates a sophisticated coupo
 
 [Store offer function](#store-offer)
 
-["Offer" resource](#offer-resource)
+[Offer resource](#offer-resource)
 
 [Add real estate to favorite](#favorite)
 
 [Store reservation function](#reservation)
-
 
 ### **tables-and-relations**
 
@@ -66,18 +63,16 @@ This graph diagram represents the actions and progress for the project.
 
 ### **authentication**
 
-routes\api.php:
+`routes\api.php`
 
 ```php
-Route::post('register',  [AuthController::class, 'register']);
-Route::post('login'   ,  [AuthController::class, 'login']);
+Route::post('register', [AuthController::class, 'register']);
+Route::post('login', [AuthController::class, 'login']);
 ```
 
-app\Http\Controllers\AuthController.php:
+`app\Http\Controllers\AuthController.php`
 
-The constructor, this function is part of a controller class and is responsible for setting up the middleware for authentication using Laravel Sanctum.
-This middleware ensures that the user is authenticated using the Sanctum authentication guard before accessing the methods.
-The $this->middleware('auth:sanctum')->only(['logout', 'user']); line specifies that the'auth:sanctum' middleware should be applied only to the 'logout' and 'user' methods.
+### constructor method
 
 ```php
 public function __construct()
@@ -86,25 +81,54 @@ public function __construct()
 }
 ```
 
+The constructor of this controller class is responsible for setting up the middleware for authentication using Laravel Sanctum. This middleware ensures that the user is authenticated using the Sanctum authentication guard before accessing the methods. The line `$this->middleware('auth:api')->only(['logout']);` specifies that the `auth:api` middleware should be applied only to the `logout` method.
+
+### register method
+
 ```php
-public function register (Request $request) 
+public function register(Request $request)
 {
     $request->validate([
-        'name'       => ['required', 'string'],
-        'email'      => ['required', 'string', 'email', 'unique:users'],  
-        'password'   => ['required', 'string', 'min:6', 'confirmed'],
+        'name'           => ['required', 'string'],
+        'email'          => ['required', 'string', 'email'],
+        'phone_code'     => ['required', 'exists:countries,phone_code'],
+        'phone'          => ['required', 'numeric'],
+        'code'           => ['required', 'numeric', 'digits:4'],
     ]);
+
+    $verification_code = VerificationCode::where([
+        ['phone', $request->phone],
+        ['phone_code', $request->phone_code],
+    ])->first();
+
+    if ($verification_code) {
+        if ($verification_code->created_at > Carbon::now()->addMinutes(env('CODE_EXPIRATION'))) {
+            $verification_code->delete();
+            throw ValidationException::withMessages(['code' => __('The verification code is expired.', ['attribute' => 'code'])]);
+        } elseif ($verification_code->code != $request->code) {
+            throw ValidationException::withMessages(['code' => __('The Code is incorrect.', ['attribute' => 'code'])]);
+        }
+    }
+
+    $user = User::where([
+        ['phone', $request->phone],
+        ['phone_code', $request->phone_code],
+    ])->first();
+
+    if ($user) {
+        throw ValidationException::withMessages(['phone' => __('The User already exist.', ['attribute' => 'phone'])]);
+    }
 
     $user = User::create([
-        'name'      => $request->name,
-        'email'     => $request->email,
-        'password'  => Hash::make($request->password),
-        'role'      => 'user',
-        'balance'   => 0,
+        'name'             => $request->name,
+        'email'            => $request->email,
+        'phone_code'       => $request->phone_code,
+        'phone'            => $request->phone,
+        'balance'          => 0,
+        'role'             => 'user',
     ]);
 
-    $token = $user->createToken('Proxy App')->accessToken;
-    
+    $token = $user->createToken('Sanctum', [])->plainTextToken;
     return response()->json([
         'user' => new UserResource($user),
         'token' => $token,
@@ -112,32 +136,77 @@ public function register (Request $request)
 }
 ```
 
+The register method in the AuthController class handles the registration of a new user with additional features like phone verification. Here is a detailed description of the code:
+
+1. The incoming request data is validated using the `validate` method. The validation rules are defined for the `name`, `email`, `phone_code`, `phone`, and `code` fields. These rules ensure that the fields are required, have the correct data types, and meet certain conditions (e.g., existence in the `countries` table, numeric values, specific digits for the code).
+3. The code checks if a verification code exists for the provided phone and phone code by querying the `VerificationCode` model.
+4. If a verification code is found, the code checks if it has expired by comparing its creation time with the current time. If it has expired, the code is deleted, and a validation exception is thrown with an appropriate error message.
+5. If the verification code is not expired, the code compares it with the provided code. If they don't match, a validation exception is thrown with an error message.
+6. Next, the code checks if a user with the provided phone and phone code already exists by querying the `User` model.
+7. If a user with the provided phone and phone code is found, a validation exception is thrown with an error message indicating that the user already exists.
+8. After passing the validation checks, a new user record is created using the `create` method on the `User` model. The provided name, email, phone code, phone number, balance, and role are stored in the respective columns of the `users` table.
+9. Finally, a token is generated for API authentication using Laravel Sanctum's `createToken` method. A JSON response is returned with the user resource, formatted using the `UserResource` class, and the token.
+
+### login method
+
 ```php
-public function login (Request $request) 
+public function login(Request $request)
 {
-   $request->validate([
-        'email'      => ['required', 'string', 'email'],  
-        'password'   => ['required', 'string'],
+    $request->validate([
+        'phone_code'     => ['required', 'exists:countries,phone_code'],
+        'phone'          => ['required', 'numeric'],
+        'code'           => ['required', 'numeric', 'digits:4'],
     ]);
-    $user = User::where('email', $request->email)->first();
-    if ($user) {
-        if (Hash::check($request->password, $user->password)) {
-            $token = $user->createToken('Mega Panel App')->accessToken;
-            return response()->json([
-                'user' => new UserResource($user),
-                'token' => $token,
-            ], 200);   
+
+    $verification_code = VerificationCode::where([
+        ['phone', $request->phone],
+        ['phone_code', $request->phone_code],
+    ])->first();
+
+    if ($verification_code) {
+        if ($verification_code->created_at > Carbon::now()->addMinutes(env('CODE_EXPIRATION'))) {
+            $verification_code->delete();
+            throw ValidationException::withMessages(['code' => __('The verification code is expired.', ['attribute' => 'code'])]);
+        } elseif ($verification_code->code != $request->code) {
+            throw ValidationException::withMessages(['code' => __('The Code is incorrect.', ['attribute' => 'code'])]);
         }
     }
-    
-    return response()->json([
-        'message' => 'email or password is incorrect.',
-        'errors' => [
-            'email' => ['email or password is incorrect.']
-        ]
-    ], 422);
+
+    $user = User::where([
+        ['phone', $request->phone],
+        ['phone_code', $request->phone_code],
+    ])->first();
+    if ($user) {
+        Auth::login($user);
+        $token = $user->createToken('Sanctum', [])->plainTextToken;
+        if ($request->remember && !$user->remember_token) {
+            $user->remember_token = Str::random(40);
+            $user->save();
+        }
+        return response()->json([
+            'user' => new UserResource($user),
+            'remember_token' => $user->remember_token,
+            'token' => $token,
+        ], 200);
+    }
+    throw ValidationException::withMessages(['phone' => __('User phone is incorrect.', ['attribute' => 'phone'])]);
 }
 ```
+
+The `login` method in the given code is responsible for authenticating a user based on their phone number and verification code. Here's a breakdown of how the code works:
+
+1. The incoming request data is validated using the `validate` method. The validation rules are defined for the `phone_code`, `phone`, and `code` fields. These rules ensure that the fields are required, have the correct data types, and meet certain conditions (e.g., existence in the `countries` table, numeric values, specific digits for the code).
+3. The code checks if a verification code exists for the provided phone and phone code by querying the `VerificationCode` model.
+4. If a verification code is found, the code performs additional checks:
+   - It verifies if the verification code's `created_at` timestamp is within the allowed time frame, specified by the `CODE_EXPIRATION` environment variable. If the code is expired, it is deleted, and a validation exception is thrown with an error message.
+   - It compares the verification code with the one provided in the request. If they don't match, a validation exception is thrown with an error message.
+5. The code then finds a user with the provided phone and phone code by querying the `User` model.
+6. If a user is found, the code performs the following tasks:
+   - It logs in the user using Laravel's `Auth::login` method.
+   - It generates a token for API authentication using Laravel Sanctum's `createToken` method. The token is associated with the user and named 'Sanctum'. An empty array is passed as the second argument to specify that no specific abilities are required for the token.
+   - It checks if the "remember me" option is enabled (`$request->remember`) and if the user doesn't already have a remember token. If both conditions are met, a remember token is generated and saved for the user.
+   - It returns a JSON response with the user resource represented by the `UserResource` class, the remember token, and the token.
+7. If there is no user with the provided phone and phone code, a validation exception is thrown with an error message indicating that the user's phone is incorrect.
 
 [🔝 Back to contents](#contents)
 
