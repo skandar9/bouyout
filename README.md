@@ -14,10 +14,12 @@ The project incorporates a sophisticated coupon and discount management system. 
 
 
 
+
 > :warning: **Warning:** This contents below ↓ contains just parts of my code.
 >                        You can access my full project files by clone it from my GitLab repository
 >                        (requires asking for my permissions  to grant you access to it):
 >                        https://gitlab.com/skandar.s1998/neoma 
+
 
 ## Contents
 (contains descriptive parts of my code)
@@ -35,13 +37,13 @@ The project incorporates a sophisticated coupon and discount management system. 
     - [l5-Swagger Example](#l5-swagger-example)
 [Show specific realestate function](#show-real-estates)
 
-[Store offer function](#store-offer)
+[Create offer](#store-offer)
 
 [Offer resource](#offer-resource)
 
 [Add real estate to favorite](#favorite)
 
-[Store reservation function](#reservation)
+[Store reservation](#reservation)
 
 ### **tables-and-relations**
 
